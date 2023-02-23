@@ -117,3 +117,60 @@ if (aPlan.withinRange(aRoom.daysTempRange))
 4. 모든 호출자가 새 함수를 사용하게 수정한다. 하나씩 수정하며 테스트한다.
 5. 호출자를 모두 수정했다면 원래 함수를 인라인한다.
 6. 새 함수의 이름을 적절히 수정하고 모든 호출자에 반영한다.
+
+### 11.5 매개변수를 질의 함수로 바꾸기
+
+```javascript
+// before
+availableVacation(anEmployee, anEmployee.grade);
+
+function availableVacation(anEmployee, grade) {
+  ...
+};
+
+// after
+availableVacation(anEmployee, anEmployee.grade);
+
+function availableVacation(anEmployee) {
+  const grade = anEmployee.grade;
+
+  ...
+};
+```
+
+> 매개변수 목록은 함수의 동작에 변화를 줄 수 있는 일차적인 수단이다. 피호출 함수가 쉽게 결정할 수 있는 값을 매개변수로 건네는 것도 일종의 중복이다. 제거하려는 매개변수의 값을 다른 매개변수에 질의해서 얻을 수 있다면 안심하고 질의 함수로 바꿀 수 있다. 단, 대상 함수가 참조 투명(referential transparency)해야 한다. 참조 투명이란 함수에 똑같은 값을 건네 호출하면 항상 똑같이 동작한다는 것을 의미한다.
+
+#### 절차
+
+1. 필요하다면 대상 매개변수의 값을 계산하는 코드를 별도 함수로 추출해 놓는다.
+2. 함수 본문에서 대상 매개변수로의 참조를 모두 찾아서 그 매개변수의 값을 만들어주는 표현식을 참조하도록 바꾼다. 하나 수정할 때마다 테스트한다.
+3. 함수 선언 바꾸기로 대상 매개변수를 없앤다.
+
+### 11.6 질의 함수를 매개변수로 바꾸기(Replace Query with Parameter)
+
+```javascript
+// before
+targetTemperature(aPlan);
+
+function targetTemperature(aPlan) {
+  currentTemperature = thermostat.currentTemperature;
+  ...
+}
+
+// after
+targetTemperature(aPlan, thermostat.currentTemperature);
+
+function targetTemperature(aPlan, currentTemperature) {
+  ...
+}
+```
+
+> 전역 변수를 참조한다거나 제거하길 원하는 원소를 참조하는 경우, 해당 참조를 매개변수로 바꿔 해결할 수 있다. 똑같은 값을 건네면 매번 똑같은 결과를 내는 함수는 다루기 쉽다. 모듈을 참조 투명하게 만들어 얻는 장점은 대체로 아주 크다. 이에 모듈을 개발할 때 순수 함수들을 따로 구분하고, 프로그램의 입출력과 기타 가변 원소들을 다루는 로직으로 순수 함수들의 겉을 감싸는 패턴을 많이 활용한다.
+
+#### 절차
+
+1. 변수 추출하기로 질의 코드를 함수 본문의 나머지 코드와 분리한다.
+2. 함수 본문 중 해당 질의를 호출하지 않는 코드들을 별도 함수로 추출한다.
+3. 방금 만든 변수를 인라인하여 제거한다.
+4. 원래 함수도 인라인한다.
+5. 새 함수의 이름을 원래 함수의 이름으로 고쳐준다.
