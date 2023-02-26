@@ -217,3 +217,70 @@ leadEngineer = createEmployee(document.leadEngineer);
 2. 생성자를 호출하던 코드를 팩터리 함수 호출로 바꾼다.
 3. 하나씩 수정할 때마다 테스트한다.
 4. 생성자의 가시 범위가 최소가 되도록 제한한다.
+
+### 11.9 함수를 명령으로 바꾸기(Replace Function with Command)
+
+```javascript
+// before
+function score(candidate, medicalExam, scoringGuide) {
+  let result = 0;
+  let healthLevel = 0;
+  // ...
+}
+
+// after
+class Scorer {
+  constructor(candidate, medicalExam, scoringGuide) {
+    this._candidate = candidate;
+    this._medicalExam = medicalExam;
+    this._scoringGuide = scoringGuide;
+  }
+
+  execute() {
+    this._reuslt = 0;
+    this._healthLevel = 0;
+    // ...
+  }
+}
+```
+
+> 함수를 그 함수만을 위한 객체 안으로 캡슐화하는 객체를 '명령 객체' 또는 단순히 '명령(command)'라고 한다. 명령은 평범한 함수 메커니즘보다 훨씬 유연하게 함수를 제어하고 표현할 수 있다. 단, 유연성은 복잡성을 키울 수 있다. 일급 함수와 명령 중 선택해야 한다면 보통은 일급 함수를 선택한다.
+
+#### 절차
+
+1. 대상 함수의 기능을 옮길 빈 클래스를 만든다. 클래스 이름은 함수 이름에 기초해 짓는다.
+2. 방금 생성한 빈 클래스로 함수를 옮긴다.
+3. 함수의 인수들 각각은 명령의 필드로 만들어 생성자를 통해 설정할지 고민해본다.
+
+### 11.10 명령을 함수로 바꾸기(Replace Command with Function)
+
+```javascript
+// before
+class ChargeCalculator {
+  construnctor(customer, usage) {
+    this._customer = customer;
+    this._usage = usage;
+  }
+
+  execute() {
+    return this._customer.rate * this._usage;
+  }
+}
+
+// after
+function charge(customer, usage) {
+  return customer.rate * usage;
+}
+```
+
+> 명령 객체는 복잡한 연산을 다룰 수 있는 강력한 메커니즘을 제공한다. 다만, 명령은 그저 함수를 하나 호출해 정해진 일을 수행하는 용도로 주로 쓰이며, 로직이 크게 복잡하지 않다면 평범한 함수로 바꿔주는 게 낫다.
+
+#### 절차
+
+1. 명령을 생성하는 코드와 명령의 실행 메서드를 호출하는 코드를 함께 함수로 추출한다.
+2. 명령의 실행 함수가 호출하는 보조 메서드들 각각을 인라인한다.
+3. 함수 선언 바꾸기를 적용하여 생성자의 매개변수 모두를 명령의 실행 메서드를 옮긴다.
+4. 명령의 실행 메서드에서 참조하는 필드를 대신 대응하는 매개변수를 사용하게끔 바꾼다. 하나씩 수정할 때마다 테스트한다.
+5. 생성자 호출과 명령의 실행 메서드 호출을 호출자 안으로 인라인한다.
+6. 테스트한다.
+7. 죽은 코드 제거하기로 명령 클래스를 없앤다.
