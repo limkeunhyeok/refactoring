@@ -284,3 +284,101 @@ function charge(customer, usage) {
 5. 생성자 호출과 명령의 실행 메서드 호출을 호출자 안으로 인라인한다.
 6. 테스트한다.
 7. 죽은 코드 제거하기로 명령 클래스를 없앤다.
+
+### 11.11 수정된 값 반환하기(Return Modified Value)
+
+```javascript
+// before
+let totalAscent = 0;
+calculateAscent();
+
+function calculateAscent() {
+  for (let i = 0; i < points.length; i++) {
+    const verticalChange = points[i].elevation - points[i - 1].elevation;
+    totalAscent += verticalChange > 0 ? vertical : 0;
+  }
+}
+
+// after
+const totalAscent = calculateAscent();
+
+function calculateAscent() {
+  let result = 0;
+  for (let i = 0; i < points.length; i++) {
+    const verticalChange = points[i].elevation - points[i - 1].elevation;
+    result += verticalChange > 0 ? vertical : 0;
+  }
+  return result;
+}
+```
+
+> 데이터가 어떻게 수정되는지를 추적하는 일은 코드에서 이해하기 가장 어려운 부분 중 하나다. 데이터가 수정된다면 그 사실을 명확히 알려주어, 어느 함수가 무슨 일을 하는지 쉽게 알 수 있게 하는 일이 중요하다. 이 리팩터링은 값 하나를 계산한다는 분명한 목적이 있는 함수들에 가장 효과적이고, 여러 개를 갱신하는 함수에는 효과적이지 않다.
+
+#### 절차
+
+1. 함수가 수정된 값을 반환하게 하여 호출자가 그 값을 자신의 변수에 저장하게 한다.
+2. 테스트한다.
+3. 피호출 함수 안에 반환할 값을 가리키는 새로운 변수를 선언한다.
+4. 테스트한다.
+5. 계산이 선언과 동시에 이뤄지도록 통합한다.
+6. 테스트한다.
+7. 피호출 함수의 변수 이름을 새 역할에 어울리도록 바꿔준다.
+8. 테스트한다.
+
+### 11.12 오류 코드를 예외로 바꾸기(Replace Error Code with Exception)
+
+```javascript
+// before
+if (data) {
+  return new ShippingRules(data);
+} else {
+  return -23;
+}
+
+// after
+if (data) {
+  return new ShippingRules(data);
+} else {
+  throw new OrderProcessingError(-23);
+}
+```
+
+> 예외는 프로그래밍 언어에서 제공하는 독립적인 오류 처리 메커니즘이다. 예외를 사용하면 오류 코드를 일일이 검사하거나 오류를 식별해 콜스택 위로 던지는 일을 신경 쓰지 않아도 된다. 예외는 정확히 예상 밖의 동작일 때만 쓰여야 한다.
+
+#### 절차
+
+1. 콜스택 상위에 해당 예외를 처리할 예외 핸들러를 작성한다.
+2. 테스트한다.
+3. 해당 오류 코드를 대체할 예외와 그 밖의 예외를 구분할 식별 방법을 찾는다.
+4. 정적 검사를 수행한다.
+5. catch절을 수정하여 직접 처리할 수 있는 예외는 적절히 대처하고 그렇지 않은 예외는 다시 던진다.
+6. 테스트한다.
+7. 오류 코드를 반환하는 곳 모두에서 예외를 던지도록 수정한다. 하나씩 수정할 때마다 테스트한다.
+8. 모두 수정했다면 그 오류 코드를 콜 스택 위로 전달하는 코드를 모두 제거한다. 하나씩 수정할 때마다 테스트한다.
+
+### 11.13 예외를 사전확인으로 바꾸기(Replace Exception with Precheck)
+
+```java
+// before
+double getValueForPeriod(int periodNumber) {
+  try {
+    return values[periodNumber];
+  } catch (ArrayIndexOutOfBoundsException e) {
+    return 0;
+  }
+}
+
+// after
+double getValueForPeriod(int periodNumber) {
+  return (periodNumber >= values.length) ? 0 : values[periodNumber];
+}
+```
+
+> 예외는 뜻밖의 오류일 때만 사용해야 한다. 함수 수행 시 문제가 될 수 있는 조건을 함수 호출 전에 검사할 수 있다면, 예외를 던지는 대신 호출하는 곳에서 조건을 검사하도록 해야 한다.
+
+#### 절차
+
+1. 예외를 유발하는 상황을 검사할 수 있는 조건문을 추가한다. catch 블록의 코드를 조건문의 조건절 중 하나로 옮기고, 남은 try 블록의 코드를 다른 조건절로 옮긴다.
+2. catch 블록에 어서션을 추가하고 테스트한다.
+3. try 문과 catch 블록을 제거한다.
+4. 테스트한다.
